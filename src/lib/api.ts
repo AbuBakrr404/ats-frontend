@@ -24,13 +24,11 @@ export async function downloadProfile(candidateId: string) {
   });
   if (!r.ok) throw new Error(`Profile download failed: ${r.status}`);
 
-  // Trigger browser download
   const blob = await r.blob();
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
 
-  // Get filename from Content-Disposition header if present
   const cd = r.headers.get("Content-Disposition") ?? "";
   const match = cd.match(/filename="(.+?)"/);
   a.download = match ? match[1] : "profile.docx";
@@ -40,11 +38,24 @@ export async function downloadProfile(candidateId: string) {
   URL.revokeObjectURL(url);
 }
 
-export async function matchJob(jobId: string) {
+export interface MatchResult {
+  candidate_id: string;
+  candidate_name: string;
+  score: number;
+  reasoning: string;
+}
+
+export interface MatchResponse {
+  job_id: string;
+  results: MatchResult[];
+  message?: string;
+}
+
+export async function matchJob(jobId: string): Promise<MatchResponse> {
   const r = await fetch(`${BASE}/jobs/${jobId}/match`, {
     method: "POST",
     headers: await authHeader(),
   });
-  if (!r.ok) throw new Error(`Match failed: ${r.status}`);
+  if (!r.ok) throw new Error(`Match failed: ${r.status} ${await r.text()}`);
   return r.json();
 }

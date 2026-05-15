@@ -6,6 +6,7 @@ import { Dashboard } from "./pages/Dashboard";
 import { Candidates } from "./pages/Candidates";
 import { CandidateProfile } from "./pages/CandidateProfile";
 import { Jobs } from "./pages/Jobs";
+import { JobDetail } from "./pages/JobDetail";
 import { Pipeline } from "./pages/Pipeline";
 
 export default function App() {
@@ -28,6 +29,7 @@ export default function App() {
             <Route path="/candidates" element={<Candidates />} />
             <Route path="/candidates/:id" element={<CandidateProfile />} />
             <Route path="/jobs" element={<Jobs />} />
+            <Route path="/jobs/:id" element={<JobDetail />} />
             <Route path="/pipeline" element={<Pipeline />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
