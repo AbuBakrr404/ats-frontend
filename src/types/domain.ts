@@ -50,6 +50,7 @@ export interface Candidate {
   ai_weaknesses: string[];
 
   stage: Stage;
+  stage_changed_at: string;
   profile_storage_path: string | null;
 }
 

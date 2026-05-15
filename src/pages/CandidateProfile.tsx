@@ -1,17 +1,21 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { downloadProfile } from "../lib/api";
+import { NotesPanel } from "../components/candidates/NotesPanel";
+import { EditCandidateModal } from "../components/candidates/EditCandidateModal";
 import type { Candidate, Stage } from "../types/domain";
 
 const STAGES: Stage[] = ["applied", "screening", "interview", "offer", "rejected"];
 
 export function CandidateProfile() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [candidate, setCandidate] = useState<Candidate | null>(null);
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState("");
+  const [editing, setEditing] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -45,6 +49,26 @@ export function CandidateProfile() {
     }
   }
 
+  async function handleDelete() {
+    if (!candidate) return;
+    if (!confirm(`Delete ${candidate.first_name} ${candidate.surname}? This cannot be undone.`)) return;
+
+    // Delete the CV file from storage (cascade deletes notes, match_results via FK)
+    if (candidate.storage_path) {
+      await supabase.storage.from("cvs").remove([candidate.storage_path]);
+    }
+    if (candidate.profile_storage_path) {
+      await supabase.storage.from("profiles").remove([candidate.profile_storage_path]);
+    }
+
+    const { error } = await supabase.from("candidates").delete().eq("id", candidate.id);
+    if (error) {
+      alert("Delete failed: " + error.message);
+      return;
+    }
+    navigate("/candidates");
+  }
+
   if (loading) return <div className="p-8 text-pt-muted">Loading...</div>;
   if (error || !candidate) return <div className="p-8 text-pt-red">{error || "Not found"}</div>;
 
@@ -54,20 +78,27 @@ export function CandidateProfile() {
         ← Back to candidates
       </Link>
 
-      <header className="flex items-start justify-between mb-6">
+      <header className="flex items-start justify-between mb-6 gap-4">
         <div>
           <h1 className="text-3xl font-bold text-pt-text">
             {candidate.first_name} {candidate.surname}
           </h1>
           <p className="text-pt-muted">{candidate.residential_area}</p>
         </div>
-        <button onClick={handleDownload} className="btn-primary" disabled={downloading}>
-          {downloading ? "Generating..." : "Download Pro Talent profile"}
-        </button>
+        <div className="flex gap-2 shrink-0">
+          <button onClick={() => setEditing(true)} className="btn-secondary text-sm">
+            Edit
+          </button>
+          <button onClick={handleDelete} className="btn-secondary text-sm text-pt-red border-red-200 hover:bg-red-50">
+            Delete
+          </button>
+          <button onClick={handleDownload} className="btn-primary text-sm" disabled={downloading}>
+            {downloading ? "Generating..." : "Download profile"}
+          </button>
+        </div>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main column */}
         <div className="lg:col-span-2 space-y-6">
           {candidate.ai_summary && (
             <section className="card">
@@ -138,7 +169,6 @@ export function CandidateProfile() {
           )}
         </div>
 
-        {/* Side column */}
         <div className="space-y-6">
           <section className="card">
             <h2 className="font-semibold mb-3">Pipeline stage</h2>
@@ -152,6 +182,8 @@ export function CandidateProfile() {
               ))}
             </select>
           </section>
+
+          <NotesPanel candidateId={candidate.id} />
 
           <section className="card">
             <h2 className="font-semibold mb-3">Personal details</h2>
@@ -180,6 +212,14 @@ export function CandidateProfile() {
           )}
         </div>
       </div>
+
+      {editing && (
+        <EditCandidateModal
+          candidate={candidate}
+          onClose={() => setEditing(false)}
+          onSaved={(updated) => { setCandidate(updated); setEditing(false); }}
+        />
+      )}
     </div>
   );
 }
