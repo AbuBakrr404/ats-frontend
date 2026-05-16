@@ -20,6 +20,7 @@ export function AppShell() {
 
         <nav className="flex-1 p-4 space-y-1">
           <SidebarLink to="/" label="Dashboard" end />
+          <SidebarLink to="/search" label="AI Search" />
           <SidebarLink to="/candidates" label="Candidates" />
           <SidebarLink to="/jobs" label="Jobs" />
           <SidebarLink to="/pipeline" label="Pipeline" />

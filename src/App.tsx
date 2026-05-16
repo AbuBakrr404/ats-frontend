@@ -8,6 +8,7 @@ import { CandidateProfile } from "./pages/CandidateProfile";
 import { Jobs } from "./pages/Jobs";
 import { JobDetail } from "./pages/JobDetail";
 import { Pipeline } from "./pages/Pipeline";
+import { RagSearch } from "./pages/RagSearch";
 
 export default function App() {
   const { session, loading } = useAuth();
@@ -26,6 +27,7 @@ export default function App() {
         <Routes>
           <Route element={<AppShell />}>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/search" element={<RagSearch />} />
             <Route path="/candidates" element={<Candidates />} />
             <Route path="/candidates/:id" element={<CandidateProfile />} />
             <Route path="/jobs" element={<Jobs />} />
